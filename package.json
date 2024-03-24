@@ -2,11 +2,16 @@
   "name": "node_intro_todo_app",
   "version": "1.0.0",
   "description": "comIT intro to NODE js",
-  "main": "app.js",
+  "main": "dist/app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "ygor furtado",
   "license": "ISC",
-  "type": "module"
+  "devDependencies": {
+    "typescript": "^5.4.3"
+  },
+  "dependencies": {
+    "ts-node": "^10.9.2"
+  }
 }
