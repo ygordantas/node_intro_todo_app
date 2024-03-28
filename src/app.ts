@@ -1,13 +1,42 @@
-import { createServer } from "node:http";
+import bodyParser from "body-parser";
+import express, { Request, Response } from "express";
 
-const server = createServer((_req, res) => {
-  res.writeHead(200, { "Content-Type": "text/plain" });
-  res.end("Uhull COMIT ! Let's goooo!\n");
+const MOCK_DATA = [
+  {
+    id: 1,
+    name: "Work",
+  },
+  {
+    id: 2,
+    name: "Groceries",
+  },
+  {
+    id: 3,
+    name: "Finance",
+  },
+  {
+    id: 4,
+    name: "Family",
+  },
+  {
+    id: 5,
+    name: "Cooking",
+  },
+  {
+    id: 6,
+    name: "Gardening",
+  },
+];
+
+const PORT = 3000;
+const app = express();
+
+app.use(bodyParser.json());
+
+app.get("/", (req: Request, res: Response) => {
+  res.send(MOCK_DATA);
+})
+
+app.listen(PORT, () => {
+  console.log(`Server is listening on port http://localhost:${PORT}`);
 });
-
-const port = 3000;
-server.listen(port, () => {
-  console.log(`[server]: Server is running at http://localhost:${port}`);
-});
-
-// => request => intercom(convert your speech into an order that's display on screen) => print in printer kitchen
