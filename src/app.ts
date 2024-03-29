@@ -1,6 +1,7 @@
-import { createServer } from "node:http";
+import bodyParser from "body-parser";
+import express, { Express, Request, Response } from "express";
 
-const PORT = 3000;
+const PORT: number = 3000;
 
 const TODO_CATEGORIES: any[] = [
   {
@@ -29,34 +30,23 @@ const TODO_CATEGORIES: any[] = [
   },
 ];
 
-const server = createServer((req, res) => {
-  if (req.method === "GET") {
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify(TODO_CATEGORIES));
-  } else if (req.method === "POST") {
-    res.writeHead(201, { "Content-Type": "application/json" });
-    let body = "";
+const app: Express = express();
 
-    req.on("data", (chunks) => {
-      body += chunks.toString();
-    });
+app.use(bodyParser.json());
 
-    req.on("end", () => {
-      const newTodo = JSON.parse(body);
-      const newTodoId = TODO_CATEGORIES[TODO_CATEGORIES.length - 1].id + 1;
-
-      TODO_CATEGORIES.push({ id: newTodoId, ...newTodo });
-
-      res.end(JSON.stringify(TODO_CATEGORIES[TODO_CATEGORIES.length - 1]));
-    });
-
-    
-  } else {
-    res.writeHead(405, { "Content-Type": "application/json" });
-    res.end("Method not allowed");
-  }
+app.get("/categories", (_req: Request, res: Response) => {
+  res.send(TODO_CATEGORIES);
 });
 
-server.listen(PORT, () => {
+app.post("/categories", (req: Request, res: Response) => {
+  const id = TODO_CATEGORIES[TODO_CATEGORIES.length - 1].id + 1;
+  const newTodo = { id, ...req.body };
+
+  TODO_CATEGORIES.push(newTodo);
+
+  res.send(newTodo);
+});
+
+app.listen(PORT, () => {
   console.log(`Listening on http://localhost:${PORT}`);
 });
