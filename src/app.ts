@@ -44,6 +44,7 @@ app.post("/categories", (req: Request, res: Response) => {
 
   TODO_CATEGORIES.push(newTodo);
 
+  res.statusCode = 201;
   res.send(newTodo);
 });
 
