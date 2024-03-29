@@ -2,7 +2,7 @@ import { createServer } from "node:http";
 
 const PORT = 3000;
 
-const TODO_CATEGORIES = [
+const TODO_CATEGORIES: any[] = [
   {
     id: 1,
     name: "Work",
