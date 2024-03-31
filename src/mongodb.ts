@@ -1,6 +1,6 @@
 import { MongoClient } from "mongodb";
 
-const uri = "<secret>";
+const uri = process.env.DB_CONNECTION_STRING!;
 const dbName = "intro";
 const categoriesCollection = "todo_categories";
 
