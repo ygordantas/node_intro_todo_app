@@ -30,6 +30,12 @@ const TODO_CATEGORIES: any[] = [
   },
 ];
 
+const TODO_PRIORITIES: any[] = [
+  { id: 1, name: "High", sortKey: 100 },
+  { id: 2, name: "Medium", sortKey: 50 },
+  { id: 3, name: "Low", sortKey: 20 },
+];
+
 const app: Express = express();
 
 app.use(bodyParser.json());
@@ -46,6 +52,18 @@ app.post("/categories", (req: Request, res: Response) => {
 
   res.statusCode = 201;
   res.send(newTodo);
+});
+
+app.get("/priorities", (_req: Request, res: Response) => {
+  res.send(TODO_PRIORITIES);
+});
+
+app.post("/priorities", (req: Request, res: Response) => {
+  const newId = TODO_PRIORITIES[TODO_PRIORITIES.length - 1].id + 1;
+  const newPriority = { ...req.body, id: newId };
+
+  TODO_PRIORITIES.push(newPriority);
+  res.send(newPriority);
 });
 
 app.listen(PORT, () => {
