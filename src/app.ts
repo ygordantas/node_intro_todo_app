@@ -6,15 +6,10 @@ import { MongoClient } from "mongodb";
 
 const DB_NAME = "intro";
 const TODO_CATEGORIES_COLLECTION_NAME = "todo_categories";
+const TODO_PRIORITIES_COLLECTION_NAME = "todo_priorities";
 
 const mongoDbConnectionString = process.env.MONGODB_CONNECTION_STRING!;
 const PORT = process.env.PORT || 3000;
-
-const TODO_PRIORITIES: any[] = [
-  { id: 1, name: "High", sortKey: 100 },
-  { id: 2, name: "Medium", sortKey: 50 },
-  { id: 3, name: "Low", sortKey: 20 },
-];
 
 const app: Express = express();
 
@@ -65,16 +60,53 @@ app.post("/categories", async (req: Request, res: Response) => {
   }
 });
 
-app.get("/priorities", (_req: Request, res: Response) => {
-  res.send(TODO_PRIORITIES);
+app.get("/priorities", async (_req: Request, res: Response) => {
+  const client = new MongoClient(mongoDbConnectionString);
+
+  try {
+    await client.connect();
+    const db = client.db(DB_NAME);
+    const collection = db.collection(TODO_PRIORITIES_COLLECTION_NAME);
+    const result = await collection.find().toArray();
+
+    await client.close();
+    res.send(result);
+  } catch (error) {
+    await client.close();
+    console.warn(
+      "An error occurred while attempting to save record to the database\n" +
+        error
+    );
+    res.statusCode = 500;
+    res.send();
+  }
 });
 
-app.post("/priorities", (req: Request, res: Response) => {
-  const newId = TODO_PRIORITIES[TODO_PRIORITIES.length - 1].id + 1;
-  const newPriority = { ...req.body, id: newId };
+app.post("/priorities", async (req: Request, res: Response) => {
+  const client = new MongoClient(mongoDbConnectionString);
+  try {
+    await client.connect();
+    const db = client.db(DB_NAME);
+    const collection = db.collection(TODO_PRIORITIES_COLLECTION_NAME);
 
-  TODO_PRIORITIES.push(newPriority);
-  res.send(newPriority);
+    const result = await collection.insertOne({
+      name: req.body.name,
+      sortKey: req.body.sortKey,
+    });
+
+    await client.close();
+
+    res.statusCode = 201;
+    res.send(result);
+  } catch (error) {
+    await client.close();
+    console.warn(
+      "An error occurred while attempting to save record to the database\n" +
+        error
+    );
+    res.statusCode = 500;
+    res.send();
+  }
 });
 
 app.listen(PORT, () => {
