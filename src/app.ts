@@ -1,34 +1,14 @@
+import "dotenv/config";
+
 import bodyParser from "body-parser";
 import express, { Express, Request, Response } from "express";
+import { MongoClient } from "mongodb";
 
-const PORT: number = 3000;
+const DB_NAME = "intro";
+const TODO_CATEGORIES_COLLECTION_NAME = "todo_categories";
 
-const TODO_CATEGORIES: any[] = [
-  {
-    id: 1,
-    name: "Work",
-  },
-  {
-    id: 2,
-    name: "Groceries",
-  },
-  {
-    id: 3,
-    name: "Finance",
-  },
-  {
-    id: 4,
-    name: "Family",
-  },
-  {
-    id: 5,
-    name: "Cooking",
-  },
-  {
-    id: 6,
-    name: "Gardening",
-  },
-];
+const mongoDbConnectionString = process.env.MONGODB_CONNECTION_STRING!;
+const PORT = process.env.PORT || 3000;
 
 const TODO_PRIORITIES: any[] = [
   { id: 1, name: "High", sortKey: 100 },
@@ -40,18 +20,49 @@ const app: Express = express();
 
 app.use(bodyParser.json());
 
-app.get("/categories", (_req: Request, res: Response) => {
-  res.send(TODO_CATEGORIES);
+app.get("/categories", async (_req: Request, res: Response) => {
+  const client = new MongoClient(mongoDbConnectionString);
+
+  try {
+    await client.connect();
+    const db = client.db(DB_NAME);
+    const collection = db.collection(TODO_CATEGORIES_COLLECTION_NAME);
+
+    const result = await collection.find().toArray();
+    await client.close();
+    res.send(result);
+  } catch (error) {
+    console.warn("Unable to connect to database.");
+    res.statusCode = 500;
+    await client.close();
+    res.send();
+  }
 });
 
-app.post("/categories", (req: Request, res: Response) => {
-  const id = TODO_CATEGORIES[TODO_CATEGORIES.length - 1].id + 1;
-  const newTodo = { id, ...req.body };
+app.post("/categories", async (req: Request, res: Response) => {
+  const client = new MongoClient(mongoDbConnectionString);
 
-  TODO_CATEGORIES.push(newTodo);
+  try {
+    await client.connect();
+    const db = client.db(DB_NAME);
+    const categoryCollection = db.collection(TODO_CATEGORIES_COLLECTION_NAME);
 
-  res.statusCode = 201;
-  res.send(newTodo);
+    const result = await categoryCollection.insertOne({
+      name: req.body.name,
+    });
+
+    res.statusCode = 201;
+    await client.close();
+    res.send(result);
+  } catch (err) {
+    await client.close();
+    console.warn(
+      "An error occurred while attempting to save record to the database\n" +
+        err
+    );
+    res.statusCode = 500;
+    res.send();
+  }
 });
 
 app.get("/priorities", (_req: Request, res: Response) => {
