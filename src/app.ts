@@ -13,13 +13,6 @@ const TODO_PRIORITIES_COLLECTION_NAME = "todo_priorities";
 const mongoDbConnectionString = process.env.MONGODB_CONNECTION_STRING!;
 const PORT = process.env.PORT || 3000;
 
-mongoose
-  .connect(mongoDbConnectionString)
-  .then(() => console.log("Successfully connected to the db."))
-  .catch((e) =>
-    console.warn(`Unable to connect to the db with error: ${e.message}`)
-  );
-
 const app: Express = express();
 
 app.use(bodyParser.json());
@@ -49,8 +42,8 @@ app.post("/categories", async (req: Request, res: Response) => {
       name: req.body.name,
     });
 
-    const result = await newTodoCategory.save()
-    
+    const result = await newTodoCategory.save();
+
     res.statusCode = 201;
     res.send(result);
   } catch (err) {
@@ -112,6 +105,14 @@ app.post("/priorities", async (req: Request, res: Response) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Listening on http://localhost:${PORT}`);
-});
+mongoose
+  .connect(mongoDbConnectionString)
+  .then(() => {
+    console.log("Successfully connected to the db.");
+    app.listen(PORT, () => {
+      console.log(`Listening on http://localhost:${PORT}`);
+    });
+  })
+  .catch((e) =>
+    console.warn(`Unable to connect to the db with error: ${e.message}`)
+  );
