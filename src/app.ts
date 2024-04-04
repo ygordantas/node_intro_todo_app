@@ -4,6 +4,7 @@ import bodyParser from "body-parser";
 import express, { Express, Request, Response } from "express";
 import { MongoClient } from "mongodb";
 import mongoose from "mongoose";
+import cors from 'cors';
 import categoriesRouter from "./routes/categoriesRoute";
 
 const DB_NAME = "intro";
@@ -13,6 +14,10 @@ const mongoDbConnectionString = process.env.MONGODB_CONNECTION_STRING!;
 const PORT = process.env.PORT || 3000;
 
 const app: Express = express();
+
+app.use(cors({
+  origin: 'http://localhost:5173'
+}));
 
 app.use(bodyParser.json());
 
