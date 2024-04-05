@@ -7,7 +7,10 @@ import mongoose from "mongoose";
 import TodoCategory from "./models/TodoCategory";
 import TodoPriority from "./models/TodoPriority";
 import HttpError from "./models/HttpError";
-import { FAIL_TO_INSERT_TO_DB } from "./constants/errorMessages";
+import {
+  FAILED_TO_INSERT_TO_DB,
+  FAILED_TO_RETRIEVE_FROM_DB,
+} from "./constants/errorMessages";
 
 const DB_NAME = "intro";
 const TODO_CATEGORIES_COLLECTION_NAME = "todo_categories";
@@ -26,21 +29,16 @@ const app: Express = express();
 app.use(bodyParser.json());
 
 app.get("/categories", async (_req: Request, res: Response) => {
-  const client = new MongoClient(mongoDbConnectionString);
-
   try {
-    await client.connect();
-    const db = client.db(DB_NAME);
-    const collection = db.collection(TODO_CATEGORIES_COLLECTION_NAME);
-
-    const result = await collection.find().toArray();
-    await client.close();
-    res.send(result);
+    const categories = await TodoCategory.find();
+    res.send(categories);
   } catch (error) {
-    console.warn("Unable to connect to database.");
-    res.statusCode = 500;
-    await client.close();
-    res.send();
+    const httpError: HttpError = {
+      httpCode: 500,
+      message: FAILED_TO_RETRIEVE_FROM_DB,
+      error,
+    };
+    return handleRequestError(res, httpError);
   }
 });
 
@@ -49,16 +47,15 @@ app.post("/categories", async (req: Request, res: Response) => {
     const newTodoCategory = new TodoCategory({
       name: req.body.name,
     });
-    
+
     const result = await newTodoCategory.save();
 
     res.statusCode = 201;
     res.send(result);
   } catch (error) {
-    const s = error;
     const httpError: HttpError = {
       httpCode: 500,
-      message: FAIL_TO_INSERT_TO_DB,
+      message: FAILED_TO_INSERT_TO_DB,
       error,
     };
     return handleRequestError(res, httpError);
@@ -100,7 +97,7 @@ app.post("/priorities", async (req: Request, res: Response) => {
   } catch (error) {
     const httpError: HttpError = {
       httpCode: 500,
-      message: FAIL_TO_INSERT_TO_DB,
+      message: FAILED_TO_INSERT_TO_DB,
       error,
     };
     return handleRequestError(res, httpError);
