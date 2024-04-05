@@ -2,11 +2,18 @@ import "dotenv/config";
 import bodyParser from "body-parser";
 import express, { Express } from "express";
 import mongoose from "mongoose";
+import cors from "cors";
 
 import todoCategoriesRouter from "./routes/todoCategoriesRoutes";
 import todoPrioritiesRouter from "./routes/todoPrioritiesRoutes";
 
 const app: Express = express();
+
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+  })
+);
 
 app.use(bodyParser.json());
 
