@@ -7,6 +7,7 @@ import cors from "cors";
 import todoCategoriesRouter from "./routes/todoCategoriesRoutes";
 import todoPrioritiesRouter from "./routes/todoPrioritiesRoutes";
 import usersRouter from "./routes/usersRoutes";
+import todosRouter from "./routes/todosRoutes";
 
 const app: Express = express();
 
@@ -22,7 +23,9 @@ app.use("/categories", todoCategoriesRouter);
 
 app.use("/priorities", todoPrioritiesRouter);
 
-app.use('/users', usersRouter);
+app.use("/users", usersRouter);
+
+app.use('/todos', todosRouter);
 
 mongoose
   .connect(process.env.MONGODB_CONNECTION_STRING!)
