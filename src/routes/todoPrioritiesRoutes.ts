@@ -3,6 +3,7 @@ import express, { Request, Response } from "express";
 import {
   FAILED_TO_RETRIEVE_FROM_DB,
   FAILED_TO_INSERT_TO_DB,
+  FAILED_TO_DELETE_FROM_DB,
 } from "../constants/errorMessages";
 import HttpError from "../models/HttpError";
 import TodoPriority from "../models/TodoPriority";
@@ -27,8 +28,7 @@ todoPrioritiesRouter.get("/", async (_req: Request, res: Response) => {
 todoPrioritiesRouter.post("/", async (req: Request, res: Response) => {
   try {
     const newTodoPriority = new TodoPriority({
-      name: req.body.name,
-      sortKey: req.body.sortKey,
+      ...req.body
     });
 
     const result = await newTodoPriority.save();
@@ -43,5 +43,19 @@ todoPrioritiesRouter.post("/", async (req: Request, res: Response) => {
     return handleRequestError(res, httpError);
   }
 });
+
+todoPrioritiesRouter.delete('/:id', async (req,res) => {
+  try { 
+    const response = await TodoPriority.findByIdAndDelete(req.params.id);
+    res.status(200).send(response);
+  } catch (error) {
+    const httpError: HttpError = {
+      httpCode: 500,
+      message: FAILED_TO_DELETE_FROM_DB,
+      error,
+    };
+    return handleRequestError(res, httpError);
+  }
+})
 
 export default todoPrioritiesRouter;
