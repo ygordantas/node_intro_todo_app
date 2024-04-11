@@ -9,14 +9,20 @@ import { handleRequestError } from "../utils";
 import User from "../models/User";
 import Todo from "../models/Todo";
 import mongoose from "mongoose";
+import TodoPriority from "../models/TodoPriority";
+import TodoCategory from "../models/TodoCategory";
 
 const todosRouter = express.Router();
 
 todosRouter.post("/", async (req, res) => {
   let user;
+  let priority;
+  let category;
 
   try {
     user = await User.findById(req.body.createdBy);
+    priority = await TodoPriority.findById(req.body.priorityId);
+    category = await TodoCategory.findById(req.body.categoryId);
   } catch (error) {
     const httpError: HttpError = {
       httpCode: 500,
@@ -34,11 +40,19 @@ todosRouter.post("/", async (req, res) => {
     return handleRequestError(res, httpError);
   }
 
+  if (!priority) {
+    const httpError: HttpError = {
+      httpCode: 404,
+      message: "Priority not found",
+    };
+    return handleRequestError(res, httpError);
+  }
+
   const timestamp = new Date();
   const todo = new Todo({
     text: req.body.text,
     priorityId: req.body.priorityId,
-    categoryId: req.body.categoryId,
+    categoryId: category ? category.id : null,
     createdBy: req.body.createdBy,
     createdAt: timestamp,
     lastUpdatedAt: timestamp,
@@ -48,11 +62,11 @@ todosRouter.post("/", async (req, res) => {
     const session = await mongoose.startSession();
     session.startTransaction();
 
-    await todo.save({session})
+    await todo.save({ session });
 
     user.todos.push(todo);
 
-    await user.save({session})
+    await user.save({ session });
 
     await session.commitTransaction();
 
