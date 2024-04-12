@@ -13,7 +13,7 @@ const app: Express = express();
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: process.env.ALLOWED_ORIGINS_CORS,
   })
 );
 
@@ -25,7 +25,7 @@ app.use("/priorities", todoPrioritiesRouter);
 
 app.use("/users", usersRouter);
 
-app.use('/todos', todosRouter);
+app.use("/todos", todosRouter);
 
 mongoose
   .connect(process.env.MONGODB_CONNECTION_STRING!)

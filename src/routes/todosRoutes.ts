@@ -1,6 +1,7 @@
 import express from "express";
 
 import {
+  FAILED_TO_DELETE_FROM_DB,
   FAILED_TO_INSERT_TO_DB,
   FAILED_TO_RETRIEVE_FROM_DB,
 } from "../constants/errorMessages";
@@ -75,6 +76,84 @@ todosRouter.post("/", async (req, res) => {
     const httpError: HttpError = {
       httpCode: 500,
       message: FAILED_TO_INSERT_TO_DB,
+      error,
+    };
+    return handleRequestError(res, httpError);
+  }
+});
+
+todosRouter.delete("/", async (req, res) => {
+  let user;
+  let todo;
+  try {
+    user = await User.findById(req.body.userId);
+    todo = await Todo.findById(req.body.todoId);
+
+    if (!user) {
+      const httpError: HttpError = {
+        httpCode: 404,
+        message: "User not found",
+      };
+      return handleRequestError(res, httpError);
+    }
+
+    if (!todo) {
+      const httpError: HttpError = {
+        httpCode: 404,
+        message: "Todo not found",
+      };
+      return handleRequestError(res, httpError);
+    }
+  } catch (error) {
+    const httpError: HttpError = {
+      httpCode: 500,
+      message: FAILED_TO_RETRIEVE_FROM_DB,
+      error,
+    };
+    return handleRequestError(res, httpError);
+  }
+
+  try {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    const deletedTodo = await Todo.findOneAndDelete({
+      createdBy: user.id,
+    }).session(session);
+
+    user.todos.pull(deletedTodo);
+
+    await user.save({ session });
+
+    if (!deletedTodo) {
+      await session.abortTransaction();
+      const httpError: HttpError = {
+        httpCode: 400,
+        message: "UserId and TodoId have no relationship",
+      };
+      return handleRequestError(res, httpError);
+    }
+
+    await session.commitTransaction();
+    res.send(deletedTodo);
+  } catch (error) {
+    const httpError: HttpError = {
+      httpCode: 500,
+      message: FAILED_TO_DELETE_FROM_DB,
+      error,
+    };
+    return handleRequestError(res, httpError);
+  }
+});
+
+todosRouter.get("/user/:userId", async (req, res) => {
+  try {
+    const todos = await Todo.find({createdBy: req.params.userId});
+    res.send(todos);
+  } catch (error) {
+    const httpError: HttpError = {
+      httpCode: 500,
+      message: FAILED_TO_RETRIEVE_FROM_DB,
       error,
     };
     return handleRequestError(res, httpError);

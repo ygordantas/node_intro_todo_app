@@ -12,6 +12,20 @@ const usersRouter = express.Router();
 
 usersRouter.post("/", async (req, res) => {
   try {
+    const user = await User.findOne({ username: req.body.username.trim() });
+    if (user) {
+      return res.status(200).send(user);
+    }
+  } catch (error) {
+    const httpError: HttpError = {
+      httpCode: 500,
+      message: FAILED_TO_RETRIEVE_FROM_DB,
+      error,
+    };
+    return handleRequestError(res, httpError);
+  }
+
+  try {
     const user = new User({
       username: req.body.username,
     });
