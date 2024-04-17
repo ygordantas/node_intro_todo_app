@@ -1,17 +1,17 @@
 import express from "express";
 
+import mongoose from "mongoose";
 import {
   FAILED_TO_DELETE_FROM_DB,
   FAILED_TO_INSERT_TO_DB,
   FAILED_TO_RETRIEVE_FROM_DB,
 } from "../constants/errorMessages";
 import HttpError from "../models/HttpError";
-import { handleRequestError } from "../utils";
-import User from "../models/User";
 import Todo from "../models/Todo";
-import mongoose from "mongoose";
-import TodoPriority from "../models/TodoPriority";
 import TodoCategory from "../models/TodoCategory";
+import TodoPriority from "../models/TodoPriority";
+import User from "../models/User";
+import { handleRequestError } from "../utils";
 
 const todosRouter = express.Router();
 
@@ -72,6 +72,29 @@ todosRouter.post("/", async (req, res) => {
     await session.commitTransaction();
 
     res.status(201).send(todo);
+  } catch (error) {
+    const httpError: HttpError = {
+      httpCode: 500,
+      message: FAILED_TO_INSERT_TO_DB,
+      error,
+    };
+    return handleRequestError(res, httpError);
+  }
+});
+
+todosRouter.put("/", async (req, res) => {
+  try {
+    const todo = await Todo.findOneAndUpdate(
+      { _id: req.body._id, createdBy: req.body.createdBy },
+      {
+        text: req.body.text,
+        categoryId: req.body.categoryId,
+        priorityId: req.body.priorityId,
+        lastUpdatedAt: new Date(),
+      },
+      { new: true }
+    );
+    res.send(todo);
   } catch (error) {
     const httpError: HttpError = {
       httpCode: 500,
@@ -146,7 +169,7 @@ todosRouter.delete("/", async (req, res) => {
 
 todosRouter.get("/user/:userId", async (req, res) => {
   try {
-    const todos = await Todo.find({createdBy: req.params.userId});
+    const todos = await Todo.find({ createdBy: req.params.userId });
     res.send(todos);
   } catch (error) {
     const httpError: HttpError = {
