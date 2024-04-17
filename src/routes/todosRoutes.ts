@@ -117,9 +117,7 @@ todosRouter.delete("/", async (req, res) => {
     const session = await mongoose.startSession();
     session.startTransaction();
 
-    const deletedTodo = await Todo.findOneAndDelete({
-      createdBy: user.id,
-    }).session(session);
+    const deletedTodo = await Todo.findByIdAndDelete(todo.id).session(session);
 
     user.todos.pull(deletedTodo);
 
