@@ -55,9 +55,7 @@ usersRouter.post("/login", async (req, res) => {
     });
 
     if (user) {
-      return res
-        .status(200)
-        .send({ _id: user._id, username: user.username, todosIds: user.todos });
+      return res.status(200).send({ _id: user._id, username: user.username });
     }
 
     const httpError: HttpError = {
