@@ -1,3 +1,4 @@
+import bcrypt from "bcryptjs";
 import express from "express";
 import {
   FAILED_TO_DELETE_FROM_DB,
@@ -30,9 +31,11 @@ usersRouter.post("/signup", async (req, res) => {
   }
 
   try {
+    const hashedPassword = await bcrypt.hash(req.body.password, 12);
+
     const user = new User({
       username: req.body.username,
-      password: req.body.password,
+      password: hashedPassword,
     });
 
     const result = await user.save();
@@ -51,11 +54,23 @@ usersRouter.post("/login", async (req, res) => {
   try {
     const user = await User.findOne({
       username: req.body.username.trim(),
-      password: req.body.password,
     });
 
     if (user) {
-      return res.status(200).send({ _id: user._id, username: user.username });
+      const isValidPassword = await bcrypt.compare(
+        req.body.password,
+        user.password as string
+      );
+
+      if (isValidPassword) {
+        return res.status(200).send({ _id: user._id, username: user.username });
+      }
+
+      const httpError: HttpError = {
+        httpCode: 400,
+        message: "Invalid credentials",
+      };
+      return handleRequestError(res, httpError);
     }
 
     const httpError: HttpError = {
