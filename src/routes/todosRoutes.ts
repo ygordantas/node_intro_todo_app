@@ -12,8 +12,11 @@ import TodoCategory from "../models/TodoCategory";
 import TodoPriority from "../models/TodoPriority";
 import User from "../models/User";
 import { handleRequestError } from "../utils";
+import checkAuth from "../middlewares/auth";
 
 const todosRouter = express.Router();
+
+todosRouter.use(checkAuth);
 
 todosRouter.post("/", async (req, res) => {
   let user;

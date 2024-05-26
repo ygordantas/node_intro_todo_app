@@ -1,15 +1,18 @@
 import express, { Request, Response } from "express";
 
-import TodoCategory from "../models/TodoCategory";
 import {
-  FAILED_TO_RETRIEVE_FROM_DB,
-  FAILED_TO_INSERT_TO_DB,
   FAILED_TO_DELETE_FROM_DB,
+  FAILED_TO_INSERT_TO_DB,
+  FAILED_TO_RETRIEVE_FROM_DB,
 } from "../constants/errorMessages";
+import checkAuth from "../middlewares/auth";
 import HttpError from "../models/HttpError";
+import TodoCategory from "../models/TodoCategory";
 import { handleRequestError } from "../utils";
 
 const todoCategoriesRouter = express.Router();
+
+todoCategoriesRouter.use(checkAuth);
 
 todoCategoriesRouter.get("/", async (_req: Request, res: Response) => {
   try {
@@ -29,7 +32,7 @@ todoCategoriesRouter.post("/", async (req: Request, res: Response) => {
   try {
     const newTodoCategory = new TodoCategory({
       name: req.body.name,
-      iconOptionName: req.body.iconOptionName
+      iconOptionName: req.body.iconOptionName,
     });
 
     const result = await newTodoCategory.save();

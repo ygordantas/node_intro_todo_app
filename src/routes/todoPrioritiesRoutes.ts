@@ -8,8 +8,11 @@ import {
 import HttpError from "../models/HttpError";
 import TodoPriority from "../models/TodoPriority";
 import { handleRequestError } from "../utils";
+import checkAuth from "../middlewares/auth";
 
 const todoPrioritiesRouter = express.Router();
+
+todoPrioritiesRouter.use(checkAuth);
 
 todoPrioritiesRouter.get("/", async (_req: Request, res: Response) => {
   try {
@@ -28,7 +31,7 @@ todoPrioritiesRouter.get("/", async (_req: Request, res: Response) => {
 todoPrioritiesRouter.post("/", async (req: Request, res: Response) => {
   try {
     const newTodoPriority = new TodoPriority({
-      ...req.body
+      ...req.body,
     });
 
     const result = await newTodoPriority.save();
@@ -44,8 +47,8 @@ todoPrioritiesRouter.post("/", async (req: Request, res: Response) => {
   }
 });
 
-todoPrioritiesRouter.delete('/:id', async (req,res) => {
-  try { 
+todoPrioritiesRouter.delete("/:id", async (req, res) => {
+  try {
     const response = await TodoPriority.findByIdAndDelete(req.params.id);
     res.status(200).send(response);
   } catch (error) {
@@ -56,6 +59,6 @@ todoPrioritiesRouter.delete('/:id', async (req,res) => {
     };
     return handleRequestError(res, httpError);
   }
-})
+});
 
 export default todoPrioritiesRouter;

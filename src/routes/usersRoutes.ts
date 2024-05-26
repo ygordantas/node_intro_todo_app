@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import express from "express";
+import jwt from "jsonwebtoken";
 import {
   FAILED_TO_DELETE_FROM_DB,
   FAILED_TO_INSERT_TO_DB,
@@ -8,12 +9,17 @@ import {
 import HttpError from "../models/HttpError";
 import User from "../models/User";
 import { handleRequestError } from "../utils";
+import checkAuth from "../middlewares/auth";
 
 const usersRouter = express.Router();
+
+const JWT_SECRET = process.env.JWT_SECRET!;
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN!;
 
 usersRouter.post("/signup", async (req, res) => {
   try {
     const user = await User.findOne({ username: req.body.username.trim() });
+
     if (user) {
       const httpError: HttpError = {
         httpCode: 400,
@@ -39,7 +45,14 @@ usersRouter.post("/signup", async (req, res) => {
     });
 
     const result = await user.save();
-    res.status(201).send({ _id: result._id, username: result.username });
+
+    const token = jwt.sign(
+      { _id: result.id, username: result.username },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN }
+    );
+
+    res.status(201).send({ _id: result.id, username: result.username, token });
   } catch (error) {
     const httpError: HttpError = {
       httpCode: 500,
@@ -63,7 +76,15 @@ usersRouter.post("/login", async (req, res) => {
       );
 
       if (isValidPassword) {
-        return res.status(200).send({ _id: user._id, username: user.username });
+        const token = jwt.sign(
+          { _id: user.id, username: user.username },
+          JWT_SECRET,
+          { expiresIn: JWT_EXPIRES_IN }
+        );
+
+        return res
+          .status(200)
+          .send({ _id: user._id, username: user.username, token });
       }
 
       const httpError: HttpError = {
@@ -87,6 +108,8 @@ usersRouter.post("/login", async (req, res) => {
     return handleRequestError(res, httpError);
   }
 });
+
+usersRouter.use(checkAuth);
 
 usersRouter.delete("/:id", async (req, res) => {
   try {
